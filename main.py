@@ -1,4 +1,4 @@
-from Tokenizer.tokenizer import Tokenizer
+from Tokenizer.v1.tokenizer import Tokenizer
 
 tokenizer = Tokenizer()
 print(tokenizer.encode("Hello, World!"))
