@@ -63,7 +63,7 @@ string escape_json(const string &s) {
 }
 
 int main() {
-  string dataset = "../validation.csv";
+  string dataset = "../train.csv";
   int vocab_size = 4096;
 
   cout << "Enter desired vocabulary size (default " << vocab_size << "): ";
