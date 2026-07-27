@@ -8,7 +8,10 @@ class Tokenizer:
     def __init__(self, bin_path="id_to_token.bin", merges_path="merges.bin"):
         self.dir_path = os.path.dirname(os.path.abspath(__file__))
         self.lib_path = self._compile_if_needed()
-        self.lib = ctypes.CDLL(self.lib_path)
+        if platform.system() == "Windows" and hasattr(os, "add_dll_directory"):
+            self.lib = ctypes.CDLL(self.lib_path, winmode=0)
+        else:
+            self.lib = ctypes.CDLL(self.lib_path)
         
         # Define C API signatures
         self.lib.create_tokenizer.argtypes = [ctypes.c_char_p, ctypes.c_char_p]
@@ -38,7 +41,14 @@ class Tokenizer:
                 self.bin_cache[i] = f.read(length)
         
     def _compile_if_needed(self):
-        ext = ".dylib" if platform.system() == "Darwin" else ".so"
+        system = platform.system()
+        if system == "Windows":
+            ext = ".dll"
+        elif system == "Darwin":
+            ext = ".dylib"
+        else:
+            ext = ".so"
+            
         lib_name = f"inference{ext}"
         lib_path = os.path.join(self.dir_path, lib_name)
         cpp_path = os.path.join(self.dir_path, "inference.cpp")
@@ -46,6 +56,9 @@ class Tokenizer:
         if not os.path.exists(lib_path):
             print(f"Compiling C++ backend to {lib_name}...")
             cmd = ["g++", "-O3", "-std=c++17", "-shared", "-fPIC", cpp_path, "-o", lib_path]
+            if system == "Windows":
+                # Statically link C++ stdlib on Windows to prevent missing DLL errors in ctypes
+                cmd.extend(["-static-libstdc++", "-static-libgcc"])
             subprocess.run(cmd, check=True)
             
         return lib_path
