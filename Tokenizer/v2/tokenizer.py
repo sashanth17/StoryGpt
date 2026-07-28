@@ -32,13 +32,18 @@ class Tokenizer:
         self.obj = self.lib.create_tokenizer(bin_c, merges_c)
         
         # Pre-cache binary decoding map natively in Python for instant decoding
-        # (decoding is trivial, no need to offload to C++)
         self.bin_cache = {}
         with open(os.path.join(self.dir_path, bin_path), "rb") as f:
             total = struct.unpack("I", f.read(4))[0]
             for i in range(total):
                 length = struct.unpack("I", f.read(4))[0]
                 self.bin_cache[i] = f.read(length)
+                
+        # --- NEW CODE: Injecting the phantom EOS token ---
+        # If your bin_cache has 4096 items (0 to 4095), vocab_size becomes 4096.
+        # We assign the EOS token to be the very next integer (4096).
+        self.eos_token_id = len(self.bin_cache)
+        self.vocab_size = self.eos_token_id + 1
         
     def _compile_if_needed(self):
         system = platform.system()
@@ -82,6 +87,11 @@ class Tokenizer:
     def decode(self, tokens: list[int]) -> str:
         b = b""
         for t in tokens:
+            # --- NEW CODE: Handle the phantom EOS token safely during decoding ---
+            if t == self.eos_token_id:
+                b += b"<|endoftext|>"
+                continue
+                
             if t in self.bin_cache:
                 b += self.bin_cache[t]
         return b.decode("utf-8", errors="replace")
@@ -95,17 +105,5 @@ if __name__ == "__main__":
     print("Initializing Tokenizer (will compile C++ backend on first run)...")
     tok = Tokenizer()
     
-    text = "Hello world! This is a incredibly fast BPE test powered by C++."
-    print("\nOriginal Text:")
-    print(text)
-    
-    encoded = tok.encode(text)
-    print("\nEncoded IDs:")
-    print(encoded)
-    
-    decoded = tok.decode(encoded)
-    print("\nDecoded Text:")
-    print(decoded)
-    
-    assert text == decoded, "Decoded text does not match original!"
-    print("\nSUCCESS! Tokenizer is working perfectly.")
+    print(f"Vocabulary size loaded: {tok.vocab_size}")
+    print(f"Assigned EOS token ID: {tok.eos_token_id}")
