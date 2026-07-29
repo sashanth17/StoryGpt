@@ -5,7 +5,7 @@ import os
 import sys
 
 def train():
-    bin_file = "validation.bin"
+    bin_file = "train.bin"
     if not os.path.exists(bin_file):
         print(f"Error: {bin_file} not found. Run prepare_data.py first.")
         sys.exit(1)
@@ -22,7 +22,7 @@ def train():
     DROPOUT = 0.1
     
     LEARNING_RATE = 3e-4
-    MAX_ITERS = 50 # Small number for demonstration (adjust as needed for full training)
+    MAX_ITERS = 20000 # Small number for demonstration (adjust as needed for full training)
     EVAL_INTERVAL = 10
     
     device = 'cuda' if torch.cuda.is_available() else 'mps' if torch.backends.mps.is_available() else 'cpu'
@@ -81,7 +81,7 @@ def train():
 
     # 5. Save Weights
     print("\n--- Saving Weights ---")
-    torch.save(model.state_dict(), "tinystory_weights.pth")
+    torch.save(model.state_dict(), "tinystory_weightsv3.pth")
     print("Training complete! Weights saved to tinystory_weights.pth")
 
 if __name__ == "__main__":
