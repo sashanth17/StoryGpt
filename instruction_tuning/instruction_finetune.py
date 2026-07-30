@@ -8,7 +8,7 @@ from dataLoader import create_dataloader
 from gpt import tinyStory
 
 def train():
-    bin_file = "instruction_train.bin"
+    bin_file = "instruction_tuning/instruction_train.bin"
     if not os.path.exists(bin_file):
         print(f"Error: {bin_file} not found. Run prepare_instruction_data.py first.")
         sys.exit(1)

@@ -12,12 +12,12 @@ except ImportError:
     sys.exit(1)
 
 def main():
-    if not os.path.exists("instruction_tuning/instruction_dataset.json"):
+    if not os.path.exists("instruction_tuning/instruction_dataset2.json"):
         print("instruction_dataset.json not found! Run generate_dataset.py first.")
         sys.exit(1)
         
     print("Loading instruction dataset...")
-    with open("instruction_tuning/instruction_dataset.json", "r", encoding="utf-8") as f:
+    with open("instruction_tuning/instruction_dataset2.json", "r", encoding="utf-8") as f:
         dataset = json.load(f)
         
     print(f"Loaded {len(dataset)} examples.")

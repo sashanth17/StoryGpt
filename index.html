@@ -3,286 +3,371 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Story Continuation Chat</title>
+<title>Story Continuation AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 
 <style>
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Arial, Helvetica, sans-serif;
-}
+    :root {
+        --bg-color: #0f172a;         /* Deep slate background */
+        --container-bg: #1e293b;     /* Card background */
+        --header-bg: #1e293bd9;      /* Slightly transparent header */
+        --user-bubble: linear-gradient(135deg, #6366f1, #4f46e5); /* Indigo gradient */
+        --bot-bubble: #334155;       /* Slate gray */
+        --input-bg: #0f172a;
+        --border-color: #334155;
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+    }
 
-body{
-    background:#343541;
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-}
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
 
-.chat-container{
-    width:100%;
-    max-width:900px;
-    height:95vh;
-    background:#202123;
-    display:flex;
-    flex-direction:column;
-    border-radius:12px;
-    overflow:hidden;
-    box-shadow:0 10px 30px rgba(0,0,0,.4);
-}
+    body {
+        background: var(--bg-color);
+        background-image: radial-gradient(circle at top right, #1e1b4b, #0f172a 60%);
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Inter', sans-serif;
+        color: var(--text-main);
+    }
 
-.header{
-    padding:18px;
-    text-align:center;
-    background:#202123;
-    color:white;
-    font-size:22px;
-    font-weight:bold;
-    border-bottom:1px solid #444654;
-}
+    .chat-container {
+        width: 100%;
+        max-width: 900px;
+        height: 95vh;
+        background: var(--container-bg);
+        display: flex;
+        flex-direction: column;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+    }
 
-.chat-box{
-    flex:1;
-    overflow-y:auto;
-    padding:20px;
-    background:#343541;
-}
+    .header {
+        padding: 20px;
+        text-align: center;
+        background: var(--header-bg);
+        backdrop-filter: blur(10px);
+        font-size: 20px;
+        font-weight: 600;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        letter-spacing: 0.5px;
+    }
 
-.message{
-    display:flex;
-    margin-bottom:18px;
-}
+    .header span {
+        background: -webkit-linear-gradient(#818cf8, #c084fc);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
 
-.user{
-    justify-content:flex-end;
-}
+    .chat-box {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        scroll-behavior: smooth;
+    }
 
-.bot{
-    justify-content:flex-start;
-}
+    .message {
+        display: flex;
+        opacity: 0;
+        animation: slideUp 0.4s ease forwards;
+    }
 
-.bubble{
-    max-width:80%;
-    padding:14px 16px;
-    border-radius:12px;
-    line-height:1.6;
-    white-space:pre-wrap;
-    word-wrap:break-word;
-    font-size:15px;
-}
+    @keyframes slideUp {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 
-.user .bubble{
-    background:#19c37d;
-    color:white;
-}
+    .user { justify-content: flex-end; }
+    .bot { justify-content: flex-start; }
 
-.bot .bubble{
-    background:#444654;
-    color:white;
-}
+    .bubble {
+        max-width: 80%;
+        padding: 16px 20px;
+        border-radius: 18px;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
 
-.input-area{
-    display:flex;
-    gap:10px;
-    padding:18px;
-    background:#202123;
-    border-top:1px solid #444654;
-}
+    /* AI Story text uses a serif font for a "book" feel */
+    .bot .bubble {
+        background: var(--bot-bubble);
+        color: var(--text-main);
+        border-bottom-left-radius: 4px;
+        font-family: 'Lora', serif;
+        font-size: 16px;
+        line-height: 1.8;
+    }
 
-textarea{
-    flex:1;
-    resize:none;
-    height:60px;
-    border:none;
-    outline:none;
-    border-radius:10px;
-    padding:12px;
-    background:#40414f;
-    color:white;
-    font-size:15px;
-}
+    /* User prompts use a clean sans-serif */
+    .user .bubble {
+        background: var(--user-bubble);
+        color: white;
+        border-bottom-right-radius: 4px;
+        font-size: 15px;
+    }
 
-button{
-    width:120px;
-    border:none;
-    border-radius:10px;
-    background:#19c37d;
-    color:white;
-    font-size:16px;
-    cursor:pointer;
-    transition:.2s;
-}
+    .latency-tag {
+        display: block;
+        margin-top: 12px;
+        font-family: 'Inter', sans-serif;
+        font-size: 11px;
+        color: var(--text-muted);
+        text-align: right;
+        font-style: normal;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        padding-top: 8px;
+    }
 
-button:hover{
-    background:#16a46a;
-}
+    .input-area {
+        display: flex;
+        gap: 12px;
+        padding: 20px;
+        background: var(--container-bg);
+        border-top: 1px solid var(--border-color);
+        align-items: flex-end;
+    }
 
-button:disabled{
-    opacity:.6;
-    cursor:not-allowed;
-}
+    textarea {
+        flex: 1;
+        resize: none;
+        height: 56px;
+        min-height: 56px;
+        max-height: 150px;
+        border: 1px solid var(--border-color);
+        outline: none;
+        border-radius: 14px;
+        padding: 16px;
+        background: var(--input-bg);
+        color: var(--text-main);
+        font-size: 15px;
+        transition: border 0.3s ease, box-shadow 0.3s ease;
+        line-height: 1.4;
+    }
 
-.typing{
-    color:#aaa;
-    font-style:italic;
-    margin-bottom:10px;
-}
+    textarea:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
 
-::-webkit-scrollbar{
-    width:8px;
-}
+    textarea::placeholder { color: var(--text-muted); }
 
-::-webkit-scrollbar-thumb{
-    background:#666;
-    border-radius:10px;
-}
+    button {
+        height: 56px;
+        width: 56px;
+        border: none;
+        border-radius: 14px;
+        background: var(--user-bubble);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+    }
+
+    button:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(99, 102, 241, 0.4);
+    }
+
+    button:active:not(:disabled) { transform: translateY(0); }
+
+    button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: var(--bot-bubble);
+        box-shadow: none;
+    }
+
+    /* Animated Typing Indicator */
+    .typing-indicator {
+        display: flex;
+        gap: 6px;
+        padding: 16px 20px;
+        background: var(--bot-bubble);
+        border-radius: 18px;
+        border-bottom-left-radius: 4px;
+        width: fit-content;
+        animation: slideUp 0.3s ease forwards;
+    }
+
+    .typing-indicator span {
+        width: 8px;
+        height: 8px;
+        background: var(--text-muted);
+        border-radius: 50%;
+        animation: bounce 1.4s infinite ease-in-out both;
+    }
+
+    .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+    .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes bounce {
+        0%, 80%, 100% { transform: scale(0); }
+        40% { transform: scale(1); }
+    }
+
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+        background: #475569;
+        border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+
+    @media (max-width: 768px) {
+        .chat-container { height: 100vh; border-radius: 0; }
+        .bubble { max-width: 90%; }
+    }
 </style>
-
 </head>
 <body>
 
 <div class="chat-container">
-
     <div class="header">
-        📖 Story Continuation
+        📖 <span>Story Gpt</span>
     </div>
 
     <div id="chat" class="chat-box">
-
         <div class="message bot">
-            <div class="bubble">
-Welcome! Start a story and I'll continue it.
-            </div>
+            <div class="bubble">Welcome to StoryGpt. Write the beginning of a prompt or a sentence, and I will continue the tale for you.</div>
         </div>
-
     </div>
 
     <div class="input-area">
-
-        <textarea
-            id="prompt"
-            placeholder="Write the beginning of a story..."
-        ></textarea>
-
-        <button id="sendBtn">
-            Send
+        <textarea id="prompt" placeholder="Once upon a time in a digital realm..."></textarea>
+        <button id="sendBtn" aria-label="Send Message">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
         </button>
-
     </div>
-
 </div>
 
 <script>
+    const API_URL = "http://127.0.0.1:8000/complete";
 
-const API_URL = "http://127.0.0.1:8000/complete";
+    const chat = document.getElementById("chat");
+    const promptBox = document.getElementById("prompt");
+    const sendBtn = document.getElementById("sendBtn");
 
-const chat = document.getElementById("chat");
-const promptBox = document.getElementById("prompt");
-const sendBtn = document.getElementById("sendBtn");
+    // Auto-resize textarea
+    promptBox.addEventListener('input', function() {
+        this.style.height = '56px';
+        this.style.height = (this.scrollHeight < 150 ? this.scrollHeight : 150) + 'px';
+    });
 
-function addMessage(text, sender){
+    function addMessage(text, sender) {
+        const msg = document.createElement("div");
+        msg.className = "message " + sender;
 
-    const msg = document.createElement("div");
-    msg.className = "message " + sender;
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        bubble.textContent = text;
 
-    const bubble = document.createElement("div");
-    bubble.className = "bubble";
-    bubble.textContent = text;
+        msg.appendChild(bubble);
+        chat.appendChild(msg);
+        chat.scrollTop = chat.scrollHeight;
 
-    msg.appendChild(bubble);
-
-    chat.appendChild(msg);
-
-    chat.scrollTop = chat.scrollHeight;
-
-    return msg;
-}
-
-async function sendStory(){
-
-    const prompt = promptBox.value.trim();
-
-    if(prompt==="") return;
-
-    addMessage(prompt,"user");
-
-    promptBox.value="";
-
-    sendBtn.disabled=true;
-
-    const typing=document.createElement("div");
-    typing.className="typing";
-    typing.id="typing";
-    typing.textContent="Generating story...";
-    chat.appendChild(typing);
-    chat.scrollTop=chat.scrollHeight;
-
-    try{
-
-        const response=await fetch(
-            API_URL + "?prompt=" + encodeURIComponent(prompt),
-            {
-                method:"GET",
-                headers:{
-                    "accept":"application/json"
-                }
-            }
-        );
-
-        document.getElementById("typing").remove();
-
-        if(!response.ok){
-            throw new Error("HTTP "+response.status);
-        }
-
-const data = await response.json();
-
-// Extract the story text
-const story = data.output || data.response || data.story || data.text || data.completion || data.result || "No response received.";
-
-// Display only the story
-addMessage(story, "bot");
-
-// Optional: show generation time
-if (data.latency !== undefined) {
-    addMessage(
-        `⚡ Generated in ${(data.latency / 1000).toFixed(2)} s`,
-        "bot"
-    );
-}
-
+        return { msg, bubble };
     }
-    catch(err){
 
-        if(document.getElementById("typing"))
+    function showTypingIndicator() {
+        const typingWrapper = document.createElement("div");
+        typingWrapper.className = "message bot";
+        typingWrapper.id = "typing";
+
+        const dots = document.createElement("div");
+        dots.className = "typing-indicator";
+        dots.innerHTML = "<span></span><span></span><span></span>";
+
+        typingWrapper.appendChild(dots);
+        chat.appendChild(typingWrapper);
+        chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function sendStory() {
+        const prompt = promptBox.value.trim();
+        if (prompt === "") return;
+
+        addMessage(prompt, "user");
+        
+        // Reset input area
+        promptBox.value = "";
+        promptBox.style.height = '56px';
+        sendBtn.disabled = true;
+
+        showTypingIndicator();
+
+        try {
+            const response = await fetch(
+                API_URL + "?prompt=" + encodeURIComponent(prompt),
+                {
+                    method: "GET",
+                    headers: { "accept": "application/json" }
+                }
+            );
+
             document.getElementById("typing").remove();
 
-        addMessage(
-            "Error: " + err.message,
-            "bot"
-        );
+            if (!response.ok) {
+                throw new Error("HTTP " + response.status);
+            }
+
+            const data = await response.json();
+            
+            // Extract the story text gracefully
+            const story = data.output || data.response || data.story || data.text || data.completion || data.result || "No response received.";
+
+            // Add the bot's story message
+            const { bubble } = addMessage(story, "bot");
+
+            // Attach latency nicely inside the same bubble if available
+            if (data.latency !== undefined) {
+                const latencyTag = document.createElement("span");
+                latencyTag.className = "latency-tag";
+                latencyTag.innerHTML = `⚡ ${(data.latency / 1000).toFixed(2)}s`;
+                bubble.appendChild(latencyTag);
+                chat.scrollTop = chat.scrollHeight;
+            }
+
+        } catch (err) {
+            const typingIndicator = document.getElementById("typing");
+            if (typingIndicator) typingIndicator.remove();
+            
+            addMessage("⚠️ Error connecting to the model: " + err.message, "bot");
+        }
+
+        sendBtn.disabled = false;
+        promptBox.focus();
     }
 
-    sendBtn.disabled=false;
+    sendBtn.addEventListener("click", sendStory);
 
-}
-
-sendBtn.addEventListener("click",sendStory);
-
-promptBox.addEventListener("keydown",function(e){
-
-    if(e.key==="Enter" && !e.shiftKey){
-
-        e.preventDefault();
-
-        sendStory();
-
-    }
-
-});
-
+    promptBox.addEventListener("keydown", function(e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            sendStory();
+        }
+    });
 </script>
 
 </body>

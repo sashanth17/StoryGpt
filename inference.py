@@ -151,9 +151,11 @@ def generate_story(
         tokenizer,
         prompt,
         device,
-        temperature=0.8
+        temperature=0.8,
+        top_k=40
 ):
 
+    formatted_prompt = f"User: {prompt}\nModel: "
     tokens = tokenizer.encode(prompt)
 
 
@@ -173,7 +175,8 @@ def generate_story(
             x,
             max_new_tokens=MAX_NEW_TOKENS,
             temperature=temperature,
-            top_k=40
+            top_k=top_k,
+            eos_id=tokenizer.eos_token_id
         )
 
 
@@ -185,12 +188,20 @@ def generate_story(
     text = tokenizer.decode(
         generated_tokens
     )
+    
+    # Parse response
+    if "Model: " in text:
+        story = text.split("Model: ")[-1]
+    else:
+        story = text
+        
+    story = story.replace("<|endoftext|>", "").strip()
 
 
     latency = (end-start)*1000
 
 
-    return text, latency
+    return story, latency
 
 
 
@@ -332,10 +343,11 @@ def run_inference():
                 tokenizer,
                 prompt,
                 device,
-                temperature=1.5
+                temperature=0.8
             )
         print(output)
         print()
     print("Latency Time : "+str(latency))
 if __name__ == "__main__":
+    #print(f"{sum(p.numel() for p in model.parameters())/1e6:.2f} Million")
     run_inference()

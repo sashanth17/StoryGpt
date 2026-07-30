@@ -82,7 +82,7 @@ class tinyStory(nn.Module):
         return logits, loss
 
     @torch.no_grad()
-    def generate(self, idx, max_new_tokens, temperature=1.0, top_k=None):
+    def generate(self, idx, max_new_tokens, temperature=1.0, top_k=None, eos_id=None):
         """
         Autoregressively generates new tokens given a conditioning sequence `idx`.
         """
@@ -111,4 +111,7 @@ class tinyStory(nn.Module):
             # Append sampled index to the running sequence
             idx = torch.cat((idx, idx_next), dim=1)
             
+            if eos_id is not None and idx_next.item() == eos_id:
+                break
+                
         return idx
